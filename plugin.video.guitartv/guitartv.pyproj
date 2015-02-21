@@ -10,7 +10,7 @@
     <SearchPath>..\..\..\..\..\..\..\devel\xbmcstubs-master\</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>plugin.video.guitartv</Name>
+    <Name>guitartv</Name>
     <RootNamespace>guitartv</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
