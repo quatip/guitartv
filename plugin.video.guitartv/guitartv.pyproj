@@ -24,7 +24,6 @@
   <ItemGroup>
     <Compile Include="addon.py" />
     <Compile Include="resources\lib\context\kodi_context.py" />
-    <Compile Include="resources\lib\context\mock_context.py" />
     <Compile Include="resources\lib\context\__init__.py" />
     <Compile Include="resources\lib\truefire\truefire_mock.py" />
     <Compile Include="resources\lib\truefire\truefire_proxy.py" />
@@ -46,9 +45,6 @@
     <Content Include="resources\data\courses_detail_delta_blues.json" />
     <Content Include="resources\data\courses_general.json" />
     <Content Include="resources\data\login.html" />
-    <Content Include="resources\lib\truefire\truefire_mock.pyo" />
-    <Content Include="resources\lib\truefire\truefire_proxy.pyo" />
-    <Content Include="resources\lib\truefire\__init__.pyo" />
     <Content Include="resources\settings.xml" />
   </ItemGroup>
   <PropertyGroup>

@@ -12,16 +12,24 @@ class KodiContext:
         self.url = sys.argv[0]
         self.addon_handle = int(sys.argv[1])
         self.params = urlparse.parse_qs(sys.argv[2][1:])
-        self._addon = xbmcaddon.Addon()
-        xbmcplugin.setContent(self.addon_handle, 'movies')
+        self.addon = xbmcaddon.Addon()
+
+    def get_func(self):
+        return self.get_param('func') or 'root'
+
+    def get_param(self, param):
+        if param in self.params:
+            return self.params[param][0]
+        else:
+            return None
 
     def get_datafile_path(self, filename):
         return xbmc.translatePath(
-            self._addon.getAddonInfo('path') + '/resources/data/' + filename)
+            self.addon.getAddonInfo('path') + '/resources/data/' + filename)
 
-    def create_url(self, funcname, params={}):
-        params['func'] = funcname
-        return self.url + '?' + urllib.urlencode(params)
+    def create_url(self, funcname, **kwargs):
+        kwargs['func'] = funcname
+        url = self.url + '?' + urllib.urlencode(kwargs)
+        #print "URL: {}".format(url)
+        return url
 
-    def get_setting(self, name):
-        return self._addon.getSetting(name)

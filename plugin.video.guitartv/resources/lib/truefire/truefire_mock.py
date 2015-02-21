@@ -16,6 +16,9 @@ class TrueFireMock:
     def course_detail(self, course_id):
         return self._open_json('courses_detail.json')
 
+    def create_url(self, func, **kwargs):
+        return self.context.create_url(func, **kwargs)
+
     def video_url(self, m3u8url):
         m3u8 = requests.get(m3u8url)
         baseurl = re.match(r'.*/', m3u8.url).group()

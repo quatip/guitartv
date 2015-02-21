@@ -6,6 +6,7 @@ from resources.lib import truefire
 from resources.lib import context
 
 context = context.Context()
+xbmcplugin.setContent(context.addon_handle, 'movies')
 provider = truefire.TrueFireProxy(context)
 
 def root():
@@ -13,7 +14,8 @@ def root():
 
     for c in sorted(courses, key=lambda x: x['title']):
         li = xbmcgui.ListItem(c['title'], iconImage=c['thumbnailURL'])        
-        url = context.create_url({'func': 'course_detail', 'course_id': c['id']})
+        url = provider.create_url('course_detail', course_id=c['id'])
+
         xbmcplugin.addDirectoryItem(
             handle=context.addon_handle, url=url, listitem=li, isFolder=True)
 
@@ -21,8 +23,8 @@ def root():
 
 
 def course_detail(course_id):
-
     detail = provider.course_detail(course_id)
+    print detail
     course = detail['course']
 
     for chapter in detail['video_files']:
@@ -35,12 +37,8 @@ def course_detail(course_id):
     xbmcplugin.endOfDirectory(context.addon_handle)
 
 
-if 'func' in context.params:
-    funcname = context.params['func'][0]
-    func = globals()[funcname]
-    nargs = func.func_code.co_argcount
-    args = func.func_code.co_varnames[0:nargs]
-    argvalues = [lambda arg: context.params[arg][0] for arg in args]
-    func(*argvalues)
-else:
-    root()
+func = globals()[context.get_func()]
+nargs = func.func_code.co_argcount
+args = func.func_code.co_varnames[0:nargs]
+argvalues = [context.get_param(arg) for arg in args]
+func(*argvalues)

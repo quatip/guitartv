@@ -1,3 +1,4 @@
+import re
 import json
 import requests
 
@@ -9,22 +10,24 @@ class TrueFireProxy:
 
     def __init__(self, context):
         self.context = context
+
         if 'auth_token' in context.params:
-            auth_token = context.params['auth_token'][0]
-            user_id = context.params['user_id'][0]
-            self.session_params = {
-                'auth_token': auth_token, 'user_id': user_id}
+            self.auth_token = context.params['auth_token'][0]
+            self.user_id = context.params['user_id'][0]
         else:
             self._login()
 
     def _login(self):
         params = {
-            'username': self.context.get_setting('username'),
-            'pass': self.context.get_setting('password')}
+            'username': self.context.addon.getSetting('username'),
+            'pass': self.context.addon.getSetting('password')}
 
         login = requests.get(self.api_url + "/login", params=params).json()
-        self.session_params = {
-            'auth_token': login['token'], 'user_id': login['member']['id']}
+        self.auth_token = login['token']
+        self.user_id = login['member']['id']
+
+    def create_url(self, func, **kwargs):
+        return self.context.create_url(func, auth_token=self.auth_token, user_id=self.user_id, **kwargs)
 
     def courses(self):
         answer = self._get('courses/general.json')['general_courses']
@@ -32,13 +35,27 @@ class TrueFireProxy:
         return answer
 
     def course_detail(self, course_id):
-        answer = self._get('courses/detail.json/' + course_id, {'videos': 1})
-        self._save_mock('courses_detail.json', answer)
+        print "Detail of course {}".format(course_id)
+        answer = self._get('courses/detail.json/' + str(course_id), videos=1)
+        #self._save_mock('courses_detail.json', answer)
         return answer
 
-    def _get(self, command, args={}):
-        args['auth_token'] = self.session_params['auth_token']
-        answer = requests.get(self.api_url + '/' + command, params=args)
+    def video_url(self, m3u8url):
+        m3u8 = requests.get(m3u8url)
+        baseurl = re.match(r'.*/', m3u8.url).group()
+        m3u8lines = m3u8.text.split('\n')
+        chunklists = [x for x in m3u8lines if re.match(r'^.*m3u8$', x)]
+
+        if chunklists:
+            video = baseurl + chunklists[0]
+            return video
+        else:
+            print "Warning: empty chunklist for {}".format(m3u8.url)
+            return None
+
+    def _get(self, command, **kwargs):
+        kwargs['auth_token'] = self.auth_token
+        answer = requests.get(self.api_url + '/' + command, params=kwargs)
         return answer.json()
 
     def _save_mock(self, name, jobject):
