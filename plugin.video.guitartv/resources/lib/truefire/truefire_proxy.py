@@ -1,7 +1,7 @@
 import re
 import json
 import requests
-
+from .educator import Educator
 
 class TrueFireProxy:
 
@@ -34,10 +34,24 @@ class TrueFireProxy:
         # self._save_mock('courses_general.json', answer)
         return answer
 
+    def available(self):
+        answer = self._get('user/availablecourses')['result']
+        self._save_mock('available', answer)
+        return answer
+
+    def course_description(self, course_id):
+        answer = self._get('courses/detail.json/' + str(course_id), videos=0)['course']
+        self._save_mock('course_description_{}'.format(course_id), answer)
+        return answer
+
+    def educators(self):
+        answer = self._get('educator/general.json')['result']
+        #self._save_mock('educators', answer)
+        return [ Educator(entry) for entry in answer ]
+
     def course_detail(self, course_id):
-        print "Detail of course {}".format(course_id)
         answer = self._get('courses/detail.json/' + str(course_id), videos=1)
-        #self._save_mock('courses_detail.json', answer)
+        #self._save_mock('courses_detail', answer)
         return answer
 
     def video_url(self, m3u8url):

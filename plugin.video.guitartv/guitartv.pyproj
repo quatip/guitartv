@@ -25,6 +25,9 @@
     <Compile Include="addon.py" />
     <Compile Include="resources\lib\context\kodi_context.py" />
     <Compile Include="resources\lib\context\__init__.py" />
+    <Compile Include="resources\lib\truefire\educator.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="resources\lib\truefire\truefire_mock.py" />
     <Compile Include="resources\lib\truefire\truefire_proxy.py" />
     <Compile Include="resources\lib\truefire\__init__.py" />

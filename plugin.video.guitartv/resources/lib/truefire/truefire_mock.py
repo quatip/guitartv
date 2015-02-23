@@ -1,7 +1,7 @@
 import json
 import re
 import requests
-
+from .educator import Educator
 
 class TrueFireMock:
 
@@ -11,10 +11,20 @@ class TrueFireMock:
         self.context = context
 
     def courses(self):
-        return self._open_json('courses_general.json')['general_courses']
+        return self._open_mock('courses_general')['general_courses']
 
     def course_detail(self, course_id):
-        return self._open_json('courses_detail.json')
+        return self._open_mock('courses_detail')
+
+    def available(self):
+        return self._open_mock('available')
+
+    def course_description(self, course_id):
+        return self._open_mock('course_description_{}'.format(course_id))
+
+    def educators(self):
+        return [ Educator(entry) for entry in self._open_mock('educators') ]
+
 
     def create_url(self, func, **kwargs):
         return self.context.create_url(func, **kwargs)
@@ -27,6 +37,6 @@ class TrueFireMock:
         video = baseurl + chunklists[0]
         return video
 
-    def _open_json(self, file):
+    def _open_mock(self, file):
         with open(self.context.get_datafile_path(file)) as data_file:
             return json.load(data_file)

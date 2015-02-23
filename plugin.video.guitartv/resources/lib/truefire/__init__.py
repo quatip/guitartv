@@ -1,7 +1,7 @@
-__all__ = ['TrueFireProxy']
+__all__ = ['TrueFireProxy', 'Educators']
 
 
-#from .truefire_mock import TrueFireMock as TrueFireProxy
+from .truefire_mock import TrueFireMock as TrueFireProxy
+from .educator import Educator
 
-
-from .truefire_proxy import TrueFireProxy
+#from .truefire_proxy import TrueFireProxy

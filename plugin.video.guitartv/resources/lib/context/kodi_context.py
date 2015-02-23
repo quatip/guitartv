@@ -25,7 +25,7 @@ class KodiContext:
 
     def get_datafile_path(self, filename):
         return xbmc.translatePath(
-            self.addon.getAddonInfo('path') + '/resources/data/' + filename)
+            self.addon.getAddonInfo('path') + '/resources/data/' + filename + '.json')
 
     def create_url(self, funcname, **kwargs):
         kwargs['func'] = funcname
