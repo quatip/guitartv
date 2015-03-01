@@ -1,101 +1,91 @@
-import re
-import requests
 import xbmcgui
 import xbmcplugin
 from resources.lib import truefire
 from resources.lib import context
 
-context = context.Context()
-provider = truefire.TrueFireProxy(context)
-xbmcplugin.setContent(context.addon_handle, 'movies')
+ctx = context.KodiContext()
+proxy = truefire.Proxy(ctx)
+xbmcplugin.setContent(ctx.addon_handle, 'movies')
+
 
 def root():
-    _addMenuEntry('available')
-    _addMenuEntry('educators')
-    _addMenuEntry('general_courses')
-    xbmcplugin.endOfDirectory(context.addon_handle)
+    _add_menu_entry('available')
+    _add_menu_entry('educators')
+    _add_menu_entry('new')
+    _add_menu_entry('hot')
+    _add_menu_entry('general_courses')
+    xbmcplugin.endOfDirectory(ctx.addon_handle)
 
-def _addMenuEntry(command, **kwargs):
+
+def _add_menu_entry(command, **kwargs):
     li = xbmcgui.ListItem(command)         
-    xbmcplugin.addDirectoryItem(handle = context.addon_handle,
-                                listitem = li,
-                                url = provider.create_url(command, **kwargs),
-                                isFolder = True) 
+    xbmcplugin.addDirectoryItem(handle=ctx.addon_handle,
+                                listitem=li,
+                                url=proxy.create_url(command, **kwargs),
+                                isFolder=True)
+
 
 def available():
-    _add_courses(provider.available())
+    _add_courses(proxy.available())
 
-def _add_courses(courses_ids):
-    educ_dict = dict([ (educ.id, educ) for educ in provider.educators() ])
-    for id in courses_ids:
-        desc = provider.course_description(id)
-        _add_course(desc, educ_dict[desc['AuthorID']])
-    xbmcplugin.endOfDirectory(context.addon_handle)
 
-def _add_course(desc, educator):
-    info = {}
-    release_date = re.search(r'(\d\d)-(\d\d\d\d)', desc['release_date'])
-    if release_date:
-        year = int(release_date.group(2))
-        info['year'] = year
+def new():
+    _add_courses(proxy.recently_added())
 
-    runningTime = re.search(r'(\d\d):(\d\d)', desc['totalRunningTime'])
-    if runningTime:
-        duration = int(runningTime.group(1))*60 + int(runningTime.group(2))
-        info['duration'] = duration
 
-    title = desc['title']
-    info['title'] = title
-    info['plot'] = desc['overview']
-    info['director'] = educator.name
+def hot():
+    _add_courses(proxy.whats_hot())
 
-    li = xbmcgui.ListItem(title)
-    li.setInfo('video', info)
-    li.setArt({ 'poster' : desc['thumbnailURL'], 'fanart' : desc['videoPreviewImage']})
 
-    url = provider.create_url('course_detail', course_id=desc['id'])
-    xbmcplugin.addDirectoryItem(handle = context.addon_handle,
-                                listitem = li, url = url, isFolder = True) 
+def general_courses():
+    _add_courses(proxy.courses())
+
+
+def _add_courses(courses):
+
+    xbmcplugin.addSortMethod(ctx.addon_handle, xbmcplugin.SORT_METHOD_TITLE)
+
+    for c in courses:
+        info = dict(title=c.title)
+        li = xbmcgui.ListItem(c.title)
+        li.setInfo('video', info)
+        li.setArt(dict(poster=c.thumbnail, fanart=c.fan_art))
+        url = proxy.create_url('course_detail', course_id=c.id)
+        xbmcplugin.addDirectoryItem(handle=ctx.addon_handle,
+                                    listitem=li, url=url, isFolder=True)
+
+    xbmcplugin.endOfDirectory(ctx.addon_handle)
 
 
 def educators():
-    for educator in provider.educators():
+    xbmcplugin.addSortMethod(ctx.addon_handle, xbmcplugin.SORT_METHOD_TITLE)
+    for educator in proxy.educators():
         li = xbmcgui.ListItem(educator.name, iconImage=educator.thumbnail)
-        li.setInfo('video', {'title': educator.name})
-        url = provider.create_url('educator_detail', id=educator.id)
-        xbmcplugin.addDirectoryItem(handle = context.addon_handle,
-                                    listitem = li, url = url, isFolder = True) 
+        li.setInfo('video', dict(title=educator.name))
+        url = proxy.create_url('educator_detail', educator_id=educator.id)
+        xbmcplugin.addDirectoryItem(handle=ctx.addon_handle,
+                                    listitem=li, url=url, isFolder=True)
 
-        xbmcplugin.endOfDirectory(context.addon_handle)
-        xbmcplugin.addSortMethod(context.addon_handle, xbmcplugin.SORT_METHOD_TITLE)
-
-def general_courses():
-    courses = provider.courses()
-
-    for c in sorted(courses, key=lambda x: x['title']):
-        li = xbmcgui.ListItem(c['title'], iconImage=c['thumbnailURL'])        
-        url = provider.create_url('course_detail', course_id=c['id'])
-        xbmcplugin.addDirectoryItem(
-            handle=context.addon_handle, url=url, listitem=li, isFolder=True)
-
-    xbmcplugin.endOfDirectory(context.addon_handle)
+        xbmcplugin.endOfDirectory(ctx.addon_handle)
 
 
 def course_detail(course_id):
-    detail = provider.course_detail(course_id)
-    course = detail['course']
+    detail = proxy.course_detail(course_id)
 
-    validChapters = [chapter for chapter in detail['video_files'] if chapter['videoUrl']]
+    for chapter in detail.chapters:
+        if chapter.url:
+            li = xbmcgui.ListItem(chapter.title, label2=chapter.sub_title)
+            url = proxy.video_url(chapter.streaming)
+            xbmcplugin.addDirectoryItem(handle=ctx.addon_handle, listitem=li, url=url)
 
-    print "Valid chapters: {}".format(len(validChapters))
+    xbmcplugin.endOfDirectory(ctx.addon_handle)
 
-    for chapter in validChapters:
-        if chapter['videoUrl']:
-            li = xbmcgui.ListItem(chapter['videoTitle'], label2=chapter['videoSubTitle'])
-            url = provider.video_url(chapter['videoStreamingUrl'])
-            xbmcplugin.addDirectoryItem(handle=context.addon_handle, listitem = li, url = url) 
 
-    xbmcplugin.endOfDirectory(context.addon_handle)
+def educator_detail(educator_id):
+    detail = proxy.educator_detail(educator_id)
+    _add_courses(detail.courses)
+
+
 
 
 def _addtestinfo(listitem):
@@ -139,8 +129,8 @@ def _addtestinfo(listitem):
     listitem.setInfo('video', info)
 
 
-func = globals()[context.get_func()]
+func = globals()[ctx.get_func()]
 nargs = func.func_code.co_argcount
 args = func.func_code.co_varnames[0:nargs]
-argvalues = [context.get_param(arg) for arg in args]
-func(*argvalues)
+argValues = [ctx.get_param(arg) for arg in args]
+func(*argValues)
