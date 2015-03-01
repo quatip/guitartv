@@ -31,6 +31,9 @@ class KodiContext:
         return xbmc.translatePath(
             self.addon.getAddonInfo('path') + '/resources/data/' + file_name)
 
+    def get_image(self, image):
+        return xbmc.translatePath(self.addon.getAddonInfo('path') + '/resources/media/' + image)
+
     def create_url(self, func_name, **kwargs):
         kwargs['func'] = func_name
         url = self.url + '?' + urllib.urlencode(kwargs)

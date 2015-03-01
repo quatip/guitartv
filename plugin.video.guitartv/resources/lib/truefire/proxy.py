@@ -28,19 +28,23 @@ class Proxy:
 
         return Proxy.__courses_dict
 
+    def get_courses(self, id_list):
+        c_dict = self.courses_dict()
+        if type(id_list) is int:
+            id_list = [id_list]
+        return [c_dict[course_id] for course_id in id_list if c_dict.get(course_id)]
+
     def available(self):
         answer = self.provider.query('user/availablecourses')
-        return self.courses_dict()[answer['result']]
+        return self.get_courses(answer['result'])
 
     def recently_added(self):
         answer = self.provider.query('courses/recently_added.json?count=25')
-        c_dict = self.courses_dict()
-        return [c_dict[course['id']] for course in answer['result']]
+        return self.get_courses([c['id'] for c in answer['result']])
 
     def whats_hot(self):
         answer = self.provider.query('courses/whats_hot.json?randomize=1')
-        c_dict = self.courses_dict()
-        return [c_dict[course['id']] for course in answer['result']]
+        return self.get_courses([c['id'] for c in answer['result']])
 
     def course_description(self, course_id):
         answer = self.provider.query('courses/detail.json/' + str(course_id))
@@ -53,8 +57,7 @@ class Proxy:
     def educator_detail(self, educator_id):
         answer = self.provider.query('educator/detail.json/' + str(educator_id))
         educator = Educator(answer['result'])
-        c_dict = self.courses_dict()
-        educator.courses = [c_dict[cid] for cid in answer['result']['publishedCourses'] if c_dict.get(cid)]
+        educator.courses = self.get_courses(answer['result']['publishedCourses'])
         return educator
 
     def course_detail(self, course_id):

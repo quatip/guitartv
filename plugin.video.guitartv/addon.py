@@ -73,12 +73,30 @@ def course_detail(course_id):
     detail = proxy.course_detail(course_id)
 
     for chapter in detail.chapters:
-        if chapter.url:
-            li = xbmcgui.ListItem(chapter.title, label2=chapter.sub_title)
+        title = chapter.title + ' - ' + chapter.sub_title
+
+        if chapter.is_available():
+            li = xbmcgui.ListItem(title, label2=chapter.sub_title)
             url = proxy.video_url(chapter.streaming)
+            li.setIconImage(detail.thumbnail)
+            xbmcplugin.addDirectoryItem(handle=ctx.addon_handle, listitem=li, url=url)
+        else:
+            li = xbmcgui.ListItem(u'\u2205 ' + title, label2=chapter.sub_title)
+            url = proxy.create_url('not_available', course_id=course_id)
+            li.setIconImage(ctx.get_image('lock.png'))
             xbmcplugin.addDirectoryItem(handle=ctx.addon_handle, listitem=li, url=url)
 
     xbmcplugin.endOfDirectory(ctx.addon_handle)
+
+    win = xbmcgui.getCurrentWindowId()
+
+
+
+
+def not_available(course_id):
+    dialog = xbmcgui.Dialog()
+    dialog.notification("Not available", "Buy the course in order to have access", icon='OverlayLocked.png')
+
 
 
 def educator_detail(educator_id):

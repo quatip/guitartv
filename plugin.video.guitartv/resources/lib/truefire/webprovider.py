@@ -36,4 +36,4 @@ class WebProvider:
     def _save_mock(self, j_object, command, **kwargs):
         filename = self.context.get_datafile_path(command, **kwargs)
         with open(filename, 'w') as outfile:
-            json.dump(j_object, outfile)
+            json.dump(j_object, outfile, sort_keys=True, indent=4, separators=(',', ': '))
